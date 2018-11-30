@@ -1,8 +1,9 @@
 package io.corenel.springbootjpastarter.member;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class Account {
@@ -11,11 +12,35 @@ public class Account {
     @GeneratedValue
     private Long Id;
 
+    @Column(nullable=false, unique=true)
     private String username;
 
     private String password;
 
     private String email;
+
+    @Transient
+    private String no;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date date = new Date();
+
+    @Embedded
+    @AttributeOverrides(
+            {
+                    @AttributeOverride(name="street", column=@Column(name="home_street")),
+                    @AttributeOverride(name="city", column=@Column(name="home_city")),
+                    @AttributeOverride(name="state", column=@Column(name="home_state")),
+                    @AttributeOverride(name="zipCode", column=@Column(name="home_zipCode"))
+            }
+            )
+    private Address homeAddress;
+
+//    @Embedded
+//    private Address officeAddress;
+
+    @OneToMany(mappedBy="account")
+    private Set<Study> studies = new HashSet<Study>();
 
     public String getUsername() {
         return username;
@@ -41,13 +66,17 @@ public class Account {
         this.email = email;
     }
 
-    @Override
-    public String toString() {
-        return "Account{" +
-                "Id=" + Id +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", email='" + email + '\'' +
-                '}';
+    public void addStudy(Study study){
+        study.setAccount(this);
+        this.getStudies().add(study);
+    }
+
+    public void removeStudy(Study study){
+        study.setAccount(null);
+        this.getStudies().remove(study);
+    }
+
+    public Set<Study> getStudies() {
+        return studies;
     }
 }
